@@ -30,9 +30,17 @@ public class Container extends HttpServlet { // Container 객체는 톰캣이 �
 		proc(request, response);
 	}
 	
-	private void proc (HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	private void proc (HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {		
+		String routerCheckResult = LoginChkInterceptor.routerChk(request);
+		
+		if(routerCheckResult != null) {
+			response.sendRedirect(routerCheckResult);
+			return;
+		}
+		
+		
 		String temp = mapper.nav(request);
-		System.out.println(temp);
+		System.out.println("temp : " + temp);
 						
 		if(temp.indexOf(":") >= 0) {			
 			String prefix = temp.substring(0, temp.indexOf(":"));
@@ -48,7 +56,6 @@ public class Container extends HttpServlet { // Container 객체는 톰캣이 �
 				response.setCharacterEncoding("UTF-8");
 				response.setContentType("application/json");
 				PrintWriter out = response.getWriter();
-				
 				out.print(value);
 				return;
 			}

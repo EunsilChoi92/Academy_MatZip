@@ -25,4 +25,8 @@ public class RestaurantService {
 			
 		return gson.toJson(list);
 	}
+	
+	public RestaurantDomain getRest(RestaurantVO param) {
+		return dao.selRest(param);
+	}
 }

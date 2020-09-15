@@ -1,16 +1,23 @@
 package com.koreait.matzip.restaurant;
 
+import java.io.File;
+import java.util.Enumeration;
+import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 
 import com.koreait.matzip.CommonDAO;
 import com.koreait.matzip.CommonUtils;
 import com.koreait.matzip.Const;
+import com.koreait.matzip.FileUtils;
 import com.koreait.matzip.SecurityUtils;
 import com.koreait.matzip.ViewRef;
 import com.koreait.matzip.db.RestaurantDAO;
 import com.koreait.matzip.vo.RestaurantDomain;
+import com.koreait.matzip.vo.RestaurantRecommendMenuVO;
 import com.koreait.matzip.vo.RestaurantVO;
 import com.oreilly.servlet.MultipartRequest;
+import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
 
 public class RestaurantController {
 	
@@ -22,7 +29,7 @@ public class RestaurantController {
 	
 	public String restMap(HttpServletRequest request) {
 		// 메뉴가 있는 템플릿, restMap.jsp가 화면에 열리도록
-		request.setAttribute(Const.TITLE, "식당");
+		request.setAttribute(Const.TITLE, "지도  보기");
 		request.setAttribute(Const.VIEW, "restaurant/restMap");
 		return ViewRef.TEMP_MENU_TEMP;
 	}
@@ -69,35 +76,35 @@ public class RestaurantController {
 		RestaurantVO param = new RestaurantVO();
 		param.setI_rest(i_rest);
 		
+		request.setAttribute("css", new String[] {"restaurant"});
+		
+		request.setAttribute("recommendMenuList", service.getRecommendMenuList(i_rest));
+		request.setAttribute("data", service.getRest(param));
 		request.setAttribute(Const.TITLE, "디테일");
 		request.setAttribute(Const.VIEW, "restaurant/restDetail");
-		request.setAttribute("data", service.getRest(param));
 		
 		return ViewRef.TEMP_MENU_TEMP;
 	}
 	
 	public String addRecMenusProc(HttpServletRequest request) {
-		String uploads = request.getRealPath("/res/img");
-		MultipartRequest multi = null;
-		String strI_rest = null;
-		String[] menu_nmArr = null;
-		String[] menu_priceArr = null;
+		int i_rest = service.addRecMenus(request);
 		
-		try {
-			multi = new MultipartRequest(request, uploads,5*1024*1024,"UTF-8",new DefaultFileRenamePolicy());
-			strI_rest = multi.getParameter("i_rest");
-			menu_nmArr = request.getParameterValues("menu_nm");
-			menu_priceArr = request.getParameterValues("menu_price");
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+		return "redirect:/restaurant/restDetail?i_rest=" + i_rest;
+	}
+	
+	public String ajaxDelRecMenu(HttpServletRequest request) {
+		int i_rest = CommonUtils.getIntParameter("i_rest", request);
+		int seq = CommonUtils.getIntParameter("seq", request);
 		
+		RestaurantRecommendMenuVO param = new RestaurantRecommendMenuVO();
+		param.setI_rest(i_rest);
+		param.setSeq(seq);
 		
-
-		for(int i=0; i<menu_nmArr.length; i++) {
-			System.out.printf("%d : %s, %s\n", i, menu_nmArr[i], menu_priceArr[i]);
-		}
+		int result = service.delRecMenu(param);
 		
-		return "redirect:/restaurant/restDetail?i_rest=" + strI_rest;
+//		String savePath = request.getServletContext().getRealPath("/res/img/restaurant");
+//		String path = String.Format("%s/%d/%s", savePath, i_rest, );
+		
+		return "ajax:" + result;
 	}
 }

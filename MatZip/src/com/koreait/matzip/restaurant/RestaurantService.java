@@ -8,13 +8,14 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
 
 import com.google.gson.Gson;
 import com.koreait.matzip.CommonUtils;
 import com.koreait.matzip.FileUtils;
 import com.koreait.matzip.db.RestaurantDAO;
 import com.koreait.matzip.vo.RestaurantDomain;
-import com.koreait.matzip.vo.RestaurantRecommendMenuVO;
+import com.koreait.matzip.vo.RestaurantMenuVO;
 import com.koreait.matzip.vo.RestaurantRecommendMenuVO;
 import com.koreait.matzip.vo.RestaurantVO;
 import com.oreilly.servlet.MultipartRequest;
@@ -41,7 +42,39 @@ public class RestaurantService {
 	public RestaurantDomain getRest(RestaurantVO param) {
 		return dao.selRest(param);
 	}
+
+	public int addMenus(HttpServletRequest request) {
+		int i_rest = CommonUtils.getIntParameter("i_rest", request);
+		System.out.println("i_rest : " + i_rest);
+		String targetPath = request.getServletContext().getRealPath("/res/img/restaurant") + "/" + i_rest + "/" + "menu";
+		FileUtils.makeFolder(targetPath);
+				
+		RestaurantMenuVO param = new RestaurantMenuVO();
+		param.setI_rest(i_rest);
+		
+		try {
+			for(Part part : request.getParts()) {
+				String fileName = part.getSubmittedFileName();
+				System.out.println("fileName : " + fileName);
+				if(fileName != null) {
+					String ext = FileUtils.getExt(fileName);
+					String saveFileNm = UUID.randomUUID() + ext;
+					part.write(targetPath + "/" + saveFileNm);
+					
+					param.setMenu_pic(saveFileNm);
+					dao.insMenu(param);
+
+				}				
+			}
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+				
+		return i_rest;
+	}
 	
+
 	public int addRecMenus(HttpServletRequest request) {
 		
 		// 기준 경로
@@ -60,9 +93,7 @@ public class RestaurantService {
 		String[] menu_priceArr = null;
 		List<RestaurantRecommendMenuVO> list = null;
 		try {
-			multi = new MultipartRequest(request, tempPath, maxFileSize, "UTF-8", new DefaultFileRenamePolicy());
-			//defaultFileRenamePolicy 찾아보긔긔긔긔긔긔긔긔긔긔ㅡ그기
-			
+			multi = new MultipartRequest(request, tempPath, maxFileSize, "UTF-8", new DefaultFileRenamePolicy());		
 			i_rest = CommonUtils.getIntParameter("i_rest", multi);
 			
 			System.out.println("i_rest : " + i_rest);
@@ -124,6 +155,10 @@ public class RestaurantService {
 	
 	public List<RestaurantRecommendMenuVO> getRecommendMenuList(int i_rest) {
 		return dao.selRecommendMenuList(i_rest);
+	}
+	
+	public List<RestaurantMenuVO> getMenuList(int i_rest) {
+		return dao.selMenuList(i_rest);
 	}
 	
 	public int delRecMenu(RestaurantRecommendMenuVO param) {

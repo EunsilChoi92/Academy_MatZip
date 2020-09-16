@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -11,6 +12,11 @@ import javax.servlet.http.HttpServletResponse;
 
 
 @WebServlet("/")
+@MultipartConfig (
+		fileSizeThreshold = 10_485_760, // 10MB
+		maxFileSize = 52_428_800, // 50MB
+		maxRequestSize = 104_857_600 // 100MB
+)
 public class Container extends HttpServlet { // Container 객체는 톰캣이 생성함
 	private static final long serialVersionUID = 1L;
 	
